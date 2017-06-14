@@ -15,6 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 EPS = 5
 SAMPLES = 5
+NUM_CLUSTERS = 5
 
 def db_cluster(path, cols, start_year=None, players=None, show_label=True):
 	# read in and clean up the data
@@ -101,6 +102,8 @@ def db_cluster_mvp(season_path, mvp_path, cols, show_label=True):
 
 	plot_clusters(data, db, names_years, "NBA MVP Stats Clustered by: " + ", ".join(cols), show_label)
 
+# TODO: explore correlations
+# TODO: check against player positions
 def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
 	# read in and clean up the data
 	data = read_csv(path)
@@ -119,7 +122,7 @@ def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
 	data = data[cols]
 	data = data.as_matrix().astype("float32", copy=False)
 
-	kmeans = KMeans(n_clusters=5, random_state=0)
+	kmeans = KMeans(n_clusters=NUM_CLUSTERS, random_state=0)
 	kmeans.fit(data)
 
 	# reduce dimensions for visualization
@@ -130,13 +133,10 @@ def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
 	pl.figure('K-Means')
 	pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=kmeans.labels_)
 
-	# print (Counter(kmeans.labels_))
 	if show_label:
-		print ("Show label")
 		i = 0
 		for name_year, x, y in zip(names_years, pca_2d[:, 0], pca_2d[:, 1]):
-			# print (kmeans.labels_[i])
-			if kmeans.labels_[i] == 4:
+			if kmeans.labels_[i] == 3:
 				pl.annotate(
 					name_year,
 					xy=(x, y), xytext=(-3, 3), fontsize=6,
@@ -216,6 +216,6 @@ if __name__ == "__main__":
 	all = ["FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%"]
 	
 	# path, cols, start_year=None, players=None, show_label=True
-	kmeans_cluster("./Data/season_stats.csv", threes, start_year=2016, show_label=True)
+	kmeans_cluster("./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
 	# db_cluster_mvp("./Data/season_stats.csv", "./Data/mvp.csv", all)
 	# db_cluster("./Data/season_stats.csv", all, players=["LeBron James", "Kobe Bryant", "Stephen Curry"])
