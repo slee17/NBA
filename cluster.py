@@ -1,4 +1,4 @@
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN, KMeans
 from sklearn.decomposition import PCA
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
@@ -8,22 +8,29 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pylab as pl
 
-def db_cluster(path, year, cols):
+from mpl_toolkits.mplot3d import Axes3D
+# from pylab import *
+
+EPS = 5
+SAMPLES = 5
+
+def db_cluster(path, cols, start_year=None, players=None, show_label=True):
+	# read in and clean up the data
 	data = read_csv(path)
-
-	# clean up
-	data = data.loc[data["Year"] > year]
+	if start_year:
+		data = data.loc[data["Year"] > start_year]
 	data = data.fillna(0)
+
+	if players:
+		data = data.loc[data["Player"].isin(players)]
 
 	# for labeling later
 	years = data["Year"].tolist()
 	names = data["Player"].tolist()
 	names_years = ["%s %.0f" % pair for pair in zip(names, years)]
 
-	# drop non-continuous variables
-	data.drop(["Unnamed: 0", "Year", "Player", "Pos", "Tm"], axis=1, inplace=True)
-	
 	data = data[cols]
 	data = data.as_matrix().astype("float32", copy=False)
 
@@ -31,8 +38,12 @@ def db_cluster(path, year, cols):
 	# stscaler = StandardScaler().fit(data)
 	# data = stscaler.transform(data)
 
+	print ("Before the fit function")
+	print (data)
+	print (data.shape)
+
 	# cluster
-	db = DBSCAN(eps=10, metric='euclidean', min_samples=10)
+	db = DBSCAN(eps=EPS, metric='euclidean', min_samples=SAMPLES)
 	db.fit(data)
 	
 	print (Counter(db.labels_))
@@ -43,12 +54,18 @@ def db_cluster(path, year, cols):
 	n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
 	print("Number of clusters: %d" % n_clusters_)
-	print("Silhouette Coefficient: %0.3f"
-	      % metrics.silhouette_score(data, labels))
+	# print("Silhouette Coefficient: %0.3f"
+	#       % metrics.silhouette_score(data, labels))
 
-	plot_clusters(data, db, names_years, "NBA Players Stats Clustered by: " + ", ".join(cols))
+	print ("Before the function call")
+	print (data)
+	print (data.shape)
 
-def db_cluster_mvp(season_path, mvp_path, cols):
+	plot_clusters(data, db, names_years,
+				"NBA Players Stats Clustered by: " + ", ".join(cols),
+				show_label, color_by=players)
+
+def db_cluster_mvp(season_path, mvp_path, cols, show_label=True):
 	season_data = read_csv("./Data/season_stats.csv")
 	mvp_data = read_csv("./Data/mvp.csv")
 	data = pd.merge(mvp_data, season_data, how="inner", left_on=["Year", "Player"], right_on=["Year", "Player"])
@@ -82,10 +99,41 @@ def db_cluster_mvp(season_path, mvp_path, cols):
 	print("Silhouette Coefficient: %0.3f"
 	      % metrics.silhouette_score(data, labels))
 
-	plot_clusters(data, db, names_years, "NBA MVP Stats Clustered by: " + ", ".join(cols))
+	plot_clusters(data, db, names_years, "NBA MVP Stats Clustered by: " + ", ".join(cols), show_label)
 
-def plot_clusters(data, db, annotations, title, show_label=True):
-	"""Function for plotting clusters. Largely taken from:
+def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
+	# read in and clean up the data
+	data = read_csv(path)
+	if start_year:
+		data = data.loc[data["Year"] > start_year]
+	data = data.fillna(0)
+
+	if players:
+		data = data.loc[data["Player"].isin(players)]
+
+	# for labeling later
+	years = data["Year"].tolist()
+	names = data["Player"].tolist()
+	names_years = ["%s %.0f" % pair for pair in zip(names, years)]
+
+	data = data[cols]
+	data = data.as_matrix().astype("float32", copy=False)
+
+	kmeans = KMeans(n_clusters=5, random_state=0)
+	kmeans.fit(data)
+
+	# reduce dimensions for visualization
+	pca = PCA(n_components=2).fit(data)
+	pca_2d = pca.transform(data)
+
+	# plot
+	pl.figure('K-Means')
+	pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=kmeans.labels_)
+	pl.show()
+
+# TODO: use PCA
+def plot_clusters(data, db, annotations, title, show_label, color_by):
+	"""Function for plotting DBSCAN clusters. Largely taken from:
 	http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#sphx-glr-auto-examples-cluster-plot-dbscan-py
 	"""
 	core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -94,6 +142,10 @@ def plot_clusters(data, db, annotations, title, show_label=True):
 	labels = db.labels_
 	unique_labels = set(labels)
 	colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+
+	print ("Before the for loop")
+	print (data)
+	print (data.shape)
 	
 	for k, col in zip(unique_labels, colors):
 	    if k == -1:
@@ -104,20 +156,38 @@ def plot_clusters(data, db, annotations, title, show_label=True):
 
 	    xy = data[class_member_mask & core_samples_mask]
 	    
+	    print ("Inside the for loop")
+	    print (data)
+	    print (data.shape)
+
+	    print ("First xy")
+	    print (xy)
+
 	    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
 	             markeredgecolor='k', markersize=14)
 
 	    xy = data[class_member_mask]
-	    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+
+	    print ("Second xy")
+	    print (xy)
+
+	    plt.plot(xy[:, 3], xy[:, 4], 'o', markerfacecolor=col,
 	             markeredgecolor='k', markersize=6)
 
+	# plt.cm.Spectral(np.linspace(0, 1, len(color_by)))
 	if show_label:
+		# some serious hack going on to make colors pretty
+		if color_by:
+			colors = plt.cm.Spectral(np.linspace(0, 1, len(color_by)))
 		for annotation, x, y in zip(annotations, data[:, 0], data[:, 1]):
+		    # assuming elements of color_by are of the form "[player first name] [player last name]"
+		    # and that annotation is of the form "[player first name] [player last name] [year]"
+		    player_name = annotation.split(" ")[0] + " " + annotation.split(" ")[1]
 		    plt.annotate(
 		        annotation,
 		        xy=(x, y), xytext=(-3, 3), fontsize=6,
 		        textcoords='offset points', ha='right', va='bottom',
-		        bbox=dict(boxstyle='round, pad=0.2', fc='skyblue', alpha=0.5),
+		        bbox=dict(boxstyle='round, pad=0.2', fc=colors[color_by.index(player_name)], alpha=0.5),
 		        arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
 
 	plt.title(title)
@@ -128,5 +198,7 @@ if __name__ == "__main__":
 	threes = ["3P", "3PA", "3P%"]
 	all = ["FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%"]
 	
-	# db_cluster("./Data/season_stats.csv", 2016, free_throws)
-	db_cluster_mvp("./Data/season_stats.csv", "./Data/mvp.csv", all)
+	# path, cols, start_year=None, players=None, show_label=True
+	kmeans_cluster("./Data/season_stats.csv", threes, start_year=2016, show_label=True)
+	# db_cluster_mvp("./Data/season_stats.csv", "./Data/mvp.csv", all)
+	# db_cluster("./Data/season_stats.csv", all, players=["LeBron James", "Kobe Bryant", "Stephen Curry"])
