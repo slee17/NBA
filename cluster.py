@@ -97,7 +97,7 @@ def db_cluster_mvp(season_path, mvp_path, cols, show_label=True):
 
 	print("Number of clusters: %d" % n_clusters_)
 	print("Silhouette Coefficient: %0.3f"
-	      % metrics.silhouette_score(data, labels))
+		  % metrics.silhouette_score(data, labels))
 
 	plot_clusters(data, db, names_years, "NBA MVP Stats Clustered by: " + ", ".join(cols), show_label)
 
@@ -129,7 +129,24 @@ def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
 	# plot
 	pl.figure('K-Means')
 	pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=kmeans.labels_)
+
+	# print (Counter(kmeans.labels_))
+	if show_label:
+		print ("Show label")
+		i = 0
+		for name_year, x, y in zip(names_years, pca_2d[:, 0], pca_2d[:, 1]):
+			# print (kmeans.labels_[i])
+			if kmeans.labels_[i] == 4:
+				pl.annotate(
+					name_year,
+					xy=(x, y), xytext=(-3, 3), fontsize=6,
+					textcoords='offset points', ha='right', va='bottom',
+					bbox=dict(boxstyle='round, pad=0.2', fc="skyblue", alpha=0.5),
+					arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
+			i += 1
+	pl.title("NBA Players Stats from %d Clustered by %s" % (start_year+1, ", ".join(cols)))
 	pl.show()
+
 
 # TODO: use PCA
 def plot_clusters(data, db, annotations, title, show_label, color_by):
@@ -148,31 +165,31 @@ def plot_clusters(data, db, annotations, title, show_label, color_by):
 	print (data.shape)
 	
 	for k, col in zip(unique_labels, colors):
-	    if k == -1:
-	        # use black for noise
-	        col = 'k'
+		if k == -1:
+			# use black for noise
+			col = 'k'
 
-	    class_member_mask = (labels == k)
+		class_member_mask = (labels == k)
 
-	    xy = data[class_member_mask & core_samples_mask]
-	    
-	    print ("Inside the for loop")
-	    print (data)
-	    print (data.shape)
+		xy = data[class_member_mask & core_samples_mask]
+		
+		print ("Inside the for loop")
+		print (data)
+		print (data.shape)
 
-	    print ("First xy")
-	    print (xy)
+		print ("First xy")
+		print (xy)
 
-	    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
-	             markeredgecolor='k', markersize=14)
+		plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+				 markeredgecolor='k', markersize=14)
 
-	    xy = data[class_member_mask]
+		xy = data[class_member_mask]
 
-	    print ("Second xy")
-	    print (xy)
+		print ("Second xy")
+		print (xy)
 
-	    plt.plot(xy[:, 3], xy[:, 4], 'o', markerfacecolor=col,
-	             markeredgecolor='k', markersize=6)
+		plt.plot(xy[:, 3], xy[:, 4], 'o', markerfacecolor=col,
+				 markeredgecolor='k', markersize=6)
 
 	# plt.cm.Spectral(np.linspace(0, 1, len(color_by)))
 	if show_label:
@@ -180,15 +197,15 @@ def plot_clusters(data, db, annotations, title, show_label, color_by):
 		if color_by:
 			colors = plt.cm.Spectral(np.linspace(0, 1, len(color_by)))
 		for annotation, x, y in zip(annotations, data[:, 0], data[:, 1]):
-		    # assuming elements of color_by are of the form "[player first name] [player last name]"
-		    # and that annotation is of the form "[player first name] [player last name] [year]"
-		    player_name = annotation.split(" ")[0] + " " + annotation.split(" ")[1]
-		    plt.annotate(
-		        annotation,
-		        xy=(x, y), xytext=(-3, 3), fontsize=6,
-		        textcoords='offset points', ha='right', va='bottom',
-		        bbox=dict(boxstyle='round, pad=0.2', fc=colors[color_by.index(player_name)], alpha=0.5),
-		        arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
+			# assuming elements of color_by are of the form "[player first name] [player last name]"
+			# and that annotation is of the form "[player first name] [player last name] [year]"
+			player_name = annotation.split(" ")[0] + " " + annotation.split(" ")[1]
+			plt.annotate(
+				annotation,
+				xy=(x, y), xytext=(-3, 3), fontsize=6,
+				textcoords='offset points', ha='right', va='bottom',
+				bbox=dict(boxstyle='round, pad=0.2', fc=colors[color_by.index(player_name)], alpha=0.5),
+				arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
 
 	plt.title(title)
 	plt.show()
