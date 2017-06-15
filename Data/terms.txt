@@ -1,0 +1,47 @@
+G: games
+GS: games started
+MP: minutes played per game
+PER: player efficiency rating
+TS%: true shooting percentage
+3PAr: 3-point attempt rate
+FTr: free throw attempt rate
+ORB%: offensive rebound percentage
+DRB%: defensive rebound percentage
+TRB%: total rebound percentage
+AST%: assist percentage
+STL%: steal percentage
+BLK%: block percentage
+TOV%: turnover percentage (per 100 plays)
+USG%: usage percentage
+blanl: 
+OWS: offensive win shares
+DWS: defensive win shares
+WS: win shares
+WS/48: win shares per 48 minutes
+blank2:
+OBPM: offensive box plus/minus
+DBPM: defensive box plus/minus
+BPM: box plus/minus
+VORP: value over replacement player
+FG: field goals
+FGA: field goal attempts
+FG%: field goal percentage
+3P: 3-point field goals
+3PA: 3-point field goal attempts
+3P%: 3-point field goal percentage
+2P: 2-point field goals
+2PA: 2-point field goal attempts
+2P%: 2-point field goal percentage
+eFG%: effective field goal percentage
+FT: free throws
+FTA: free throw attempts
+FT%: free throw percentage
+ORB: offensive rebounds
+DRB: defensive rebounds
+TRB: total rebounds
+AST: assists
+STL: steals
+BLK: blocks
+TOV: turnovers
+PF: personal fouls
+PTS: points

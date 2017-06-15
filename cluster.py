@@ -214,6 +214,8 @@ if __name__ == "__main__":
 	free_throws = ["FT", "FTA", "FT%"]
 	threes = ["3P", "3PA", "3P%"]
 	all = ["FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%"]
+	player_info = ["height", "weight", "college", "born", "birth_city", "birth_state"]
+	
 	
 	# path, cols, start_year=None, players=None, show_label=True
 	kmeans_cluster("./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
