@@ -15,7 +15,65 @@ from mpl_toolkits.mplot3d import Axes3D
 
 EPS = 5
 SAMPLES = 5
+METRIC = "euclidean"
 NUM_CLUSTERS = 5
+
+def cluster(alg, path, cols, start_year=None, players=None, show_label=True):
+	# read in and clean up the data
+	data = read_csv(path)
+	if start_year:
+		data = data.loc[data["Year"] > start_year]
+	data = data.fillna(0)
+
+	if players:
+		data = data.loc[data["Player"].isin(players)]
+
+	# for labeling later
+	years = data["Year"].tolist()
+	names = data["Player"].tolist()
+	names_years = ["%s %.0f" % pair for pair in zip(names, years)]
+
+	data = data[cols]
+	data = data.as_matrix().astype("float32", copy=False)
+
+	# use the indicated clustering algorithm
+	alg = alg.lower()
+	if alg == "kmeans":
+		clusterer = KMeans(n_clusters=NUM_CLUSTERS, random_state=0)
+	elif alg == "dbscan":
+		clusterer = DBSCAN(eps=EPS, metric=METRIC, min_samples=SAMPLES)
+	else:
+		raise ValueError("Clustering algorithm unrecognized.")
+
+	clusterer.fit(data)
+
+	# reduce dimensions for visualization
+	pca = PCA(n_components=2).fit(data)
+	pca_2d = pca.transform(data)
+
+	# plot
+	# pl.figure('K-Means')
+
+	unique_labels = set(clusterer.labels_)
+
+	if show_label:
+		i = 0
+		for unique_label in unique_labels:
+			pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=clusterer.labels_)
+			for name_year, x, y in zip(names_years, pca_2d[:, 0], pca_2d[:, 1]):			
+				if clusterer.labels_[i] == unique_label:
+					pl.annotate(
+						name_year,
+						xy=(x, y), xytext=(-3, 3), fontsize=6,
+						textcoords='offset points', ha='right', va='bottom',
+						bbox=dict(boxstyle='round, pad=0.2', fc="skyblue", alpha=0.5),
+						arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
+				i += 1
+			i = 0
+			pl.title("NBA Players Stats from %d Clustered by %s using %s"
+				% (start_year+1, ", ".join(cols), alg))
+			pl.show()
+	# pl.show()
 
 def db_cluster(path, cols, start_year=None, players=None, show_label=True):
 	# read in and clean up the data
@@ -144,7 +202,7 @@ def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
 					bbox=dict(boxstyle='round, pad=0.2', fc="skyblue", alpha=0.5),
 					arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
 			i += 1
-	pl.title("NBA Players Stats from %d Clustered by %s" % (start_year+1, ", ".join(cols)))
+	pl.title("NBA Players Stats from %d on Clustered by %s" % (start_year+1, ", ".join(cols)))
 	pl.show()
 
 
@@ -215,9 +273,9 @@ if __name__ == "__main__":
 	threes = ["3P", "3PA", "3P%"]
 	all = ["FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%"]
 	player_info = ["height", "weight", "college", "born", "birth_city", "birth_state"]
-	
-	
+
 	# path, cols, start_year=None, players=None, show_label=True
-	kmeans_cluster("./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
+	# kmeans_cluster("./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
+	cluster("kmeans", "./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
 	# db_cluster_mvp("./Data/season_stats.csv", "./Data/mvp.csv", all)
 	# db_cluster("./Data/season_stats.csv", all, players=["LeBron James", "Kobe Bryant", "Stephen Curry"])
