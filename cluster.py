@@ -18,6 +18,8 @@ SAMPLES = 5
 METRIC = "euclidean"
 NUM_CLUSTERS = 5
 
+# TODO: explore correlations
+# TODO: check against player positions
 def cluster(alg, path, cols, start_year=None, players=None, show_label=True):
 	# read in and clean up the data
 	data = read_csv(path)
@@ -35,6 +37,10 @@ def cluster(alg, path, cols, start_year=None, players=None, show_label=True):
 
 	data = data[cols]
 	data = data.as_matrix().astype("float32", copy=False)
+
+	# normalize
+	# stscaler = StandardScaler().fit(data)
+	# data = stscaler.transform(data)
 
 	# use the indicated clustering algorithm
 	alg = alg.lower()
@@ -75,55 +81,6 @@ def cluster(alg, path, cols, start_year=None, players=None, show_label=True):
 			pl.show()
 	# pl.show()
 
-def db_cluster(path, cols, start_year=None, players=None, show_label=True):
-	# read in and clean up the data
-	data = read_csv(path)
-	if start_year:
-		data = data.loc[data["Year"] > start_year]
-	data = data.fillna(0)
-
-	if players:
-		data = data.loc[data["Player"].isin(players)]
-
-	# for labeling later
-	years = data["Year"].tolist()
-	names = data["Player"].tolist()
-	names_years = ["%s %.0f" % pair for pair in zip(names, years)]
-
-	data = data[cols]
-	data = data.as_matrix().astype("float32", copy=False)
-
-	# normalize
-	# stscaler = StandardScaler().fit(data)
-	# data = stscaler.transform(data)
-
-	print ("Before the fit function")
-	print (data)
-	print (data.shape)
-
-	# cluster
-	db = DBSCAN(eps=EPS, metric='euclidean', min_samples=SAMPLES)
-	db.fit(data)
-	
-	print (Counter(db.labels_))
-	
-	labels = db.labels_
-
-	# number of clusters in labels, ignoring noise if present
-	n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-
-	print("Number of clusters: %d" % n_clusters_)
-	# print("Silhouette Coefficient: %0.3f"
-	#       % metrics.silhouette_score(data, labels))
-
-	print ("Before the function call")
-	print (data)
-	print (data.shape)
-
-	plot_clusters(data, db, names_years,
-				"NBA Players Stats Clustered by: " + ", ".join(cols),
-				show_label, color_by=players)
-
 def db_cluster_mvp(season_path, mvp_path, cols, show_label=True):
 	season_data = read_csv("./Data/season_stats.csv")
 	mvp_data = read_csv("./Data/mvp.csv")
@@ -159,52 +116,6 @@ def db_cluster_mvp(season_path, mvp_path, cols, show_label=True):
 		  % metrics.silhouette_score(data, labels))
 
 	plot_clusters(data, db, names_years, "NBA MVP Stats Clustered by: " + ", ".join(cols), show_label)
-
-# TODO: explore correlations
-# TODO: check against player positions
-def kmeans_cluster(path, cols, start_year=None, players=None, show_label=True):
-	# read in and clean up the data
-	data = read_csv(path)
-	if start_year:
-		data = data.loc[data["Year"] > start_year]
-	data = data.fillna(0)
-
-	if players:
-		data = data.loc[data["Player"].isin(players)]
-
-	# for labeling later
-	years = data["Year"].tolist()
-	names = data["Player"].tolist()
-	names_years = ["%s %.0f" % pair for pair in zip(names, years)]
-
-	data = data[cols]
-	data = data.as_matrix().astype("float32", copy=False)
-
-	kmeans = KMeans(n_clusters=NUM_CLUSTERS, random_state=0)
-	kmeans.fit(data)
-
-	# reduce dimensions for visualization
-	pca = PCA(n_components=2).fit(data)
-	pca_2d = pca.transform(data)
-
-	# plot
-	pl.figure('K-Means')
-	pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=kmeans.labels_)
-
-	if show_label:
-		i = 0
-		for name_year, x, y in zip(names_years, pca_2d[:, 0], pca_2d[:, 1]):
-			if kmeans.labels_[i] == 3:
-				pl.annotate(
-					name_year,
-					xy=(x, y), xytext=(-3, 3), fontsize=6,
-					textcoords='offset points', ha='right', va='bottom',
-					bbox=dict(boxstyle='round, pad=0.2', fc="skyblue", alpha=0.5),
-					arrowprops=dict(arrowstyle='->', connectionstyle='arc3, rad=0'))
-			i += 1
-	pl.title("NBA Players Stats from %d on Clustered by %s" % (start_year+1, ", ".join(cols)))
-	pl.show()
-
 
 # TODO: use PCA
 def plot_clusters(data, db, annotations, title, show_label, color_by):
@@ -274,8 +185,6 @@ if __name__ == "__main__":
 	all = ["FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P", "2PA", "2P%", "eFG%"]
 	player_info = ["height", "weight", "college", "born", "birth_city", "birth_state"]
 
-	# path, cols, start_year=None, players=None, show_label=True
-	# kmeans_cluster("./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
 	cluster("kmeans", "./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
+	cluster("dbscan", "./Data/season_stats.csv", free_throws, start_year=2016, show_label=True)
 	# db_cluster_mvp("./Data/season_stats.csv", "./Data/mvp.csv", all)
-	# db_cluster("./Data/season_stats.csv", all, players=["LeBron James", "Kobe Bryant", "Stephen Curry"])
