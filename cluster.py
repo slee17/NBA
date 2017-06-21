@@ -1,5 +1,6 @@
-from sklearn.cluster import DBSCAN, KMeans
+from sklearn.cluster import DBSCAN, KMeans, SpectralClustering, AgglomerativeClustering
 from sklearn.decomposition import PCA
+from sklearn.neighbors import kneighbors_graph
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from pandas import read_csv
@@ -51,6 +52,17 @@ def cluster(alg, path, cols, mvp_path=None, start_year=None, players=None, show_
 		clusterer = KMeans(n_clusters=K_NUM_CLUSTERS, random_state=0)
 	elif alg == "dbscan":
 		clusterer = DBSCAN(eps=DB_EPS, metric=DB_METRIC, min_samples=DB_SAMPLES)
+	elif alg == "spectral":
+		clusterer = SpectralClustering(n_clusters=5,
+										eigen_solver='arpack',
+										affinity="nearest_neighbors")
+	elif alg == "agglomerative":
+		# connectivity matrix for structured Ward
+		connectivity = kneighbors_graph(data, n_neighbors=10, include_self=False)
+		# make connectivity symmetric
+		connectivity = 0.5 * (connectivity + connectivity.T)
+		clusterer = AgglomerativeClustering(n_clusters=5, linkage='ward',
+											connectivity=connectivity)
 	else:
 		raise ValueError("Clustering algorithm unrecognized.")
 
@@ -67,7 +79,7 @@ def cluster(alg, path, cols, mvp_path=None, start_year=None, players=None, show_
 		i = 0
 		for unique_label in unique_labels:
 			pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=clusterer.labels_)
-			for name_year, x, y in zip(names_years, pca_2d[:, 0], pca_2d[:, 1]):			
+			for name_year, x, y in zip(names_years, pca_2d[:, 0], pca_2d[:, 1]):            
 				if clusterer.labels_[i] == unique_label:
 					pl.annotate(
 						name_year,
@@ -95,6 +107,7 @@ if __name__ == "__main__":
 
 	for name, category in categories.items():
 		# cluster("kmeans", "./Data/season_stats.csv", category, start_year=2016, show_label=True)
-		cluster("kmeans", "./Data/season_stats.csv", category, mvp_path="Data/mvp.csv", show_label=True)
+		# cluster("kmeans", "./Data/season_stats.csv", category, mvp_path="Data/mvp.csv", show_label=True)
+		cluster("agglomerative", "./Data/season_stats.csv", category, mvp_path="Data/mvp.csv", show_label=True)
 		# cluster("dbscan", "./Data/season_stats.csv", category, start_year=2016, show_label=True)
 		# db_cluster_mvp("./Data/season_stats.csv", "./Data/mvp.csv", all)
