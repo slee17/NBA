@@ -1,4 +1,4 @@
-DB_EPS = 0.5
+DB_EPS = 0.7
 DB_METRIC = "euclidean"
 DB_SAMPLES = 5
 

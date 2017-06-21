@@ -23,7 +23,10 @@ def cluster(alg, path, cols, mvp_path=None, start_year=None, players=None, show_
 	data = read_csv(path)
 	if mvp_path:
 		mvp_data = read_csv(mvp_path)
-		data = pd.merge(mvp_data, data, how="inner", left_on=["Year", "Player"], right_on=["Year", "Player"])
+		try:
+			data = pd.merge(mvp_data, data, how="inner", left_on=["Year", "Player"], right_on=["Year", "Player"])
+		except KeyError:
+			data = pd.merge(mvp_data, data, how="inner", left_on=["Player"], right_on=["Player"])
 	if start_year:
 		data = data.loc[data["Year"] > start_year]
 	if players:
@@ -109,7 +112,8 @@ def cluster(alg, path, cols, mvp_path=None, start_year=None, players=None, show_
 			pl.show()
 
 if __name__ == "__main__":
-	cluster("dbscan", "./Data/players.csv", ["height", "weight"])
+	# cluster("dbscan", "./Data/players.csv", ["height", "weight"])
+	cluster("dbscan", "./Data/players.csv", ["height", "weight"], mvp_path="Data/mvp.csv")
 
 	# categories = {}
 	# categories['free_throws'] = ["FT", "FTA", "FT%"]
