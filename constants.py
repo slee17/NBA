@@ -1,0 +1,5 @@
+DB_EPS = 0.5
+DB_METRIC = "euclidean"
+DB_SAMPLES = 5
+
+K_NUM_CLUSTERS = 5

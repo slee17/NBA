@@ -12,10 +12,8 @@ import pylab as pl
 
 from mpl_toolkits.mplot3d import Axes3D
 
-EPS = 0.5
-SAMPLES = 5
-METRIC = "euclidean"
-NUM_CLUSTERS = 5
+# import constants
+from constants import *
 
 # TODO: explore correlations
 # TODO: check against player positions
@@ -50,9 +48,9 @@ def cluster(alg, path, cols, mvp_path=None, start_year=None, players=None, show_
 	# use the indicated clustering algorithm
 	alg = alg.lower()
 	if alg == "kmeans":
-		clusterer = KMeans(n_clusters=NUM_CLUSTERS, random_state=0)
+		clusterer = KMeans(n_clusters=K_NUM_CLUSTERS, random_state=0)
 	elif alg == "dbscan":
-		clusterer = DBSCAN(eps=EPS, metric=METRIC, min_samples=SAMPLES)
+		clusterer = DBSCAN(eps=DB_EPS, metric=DB_METRIC, min_samples=DB_SAMPLES)
 	else:
 		raise ValueError("Clustering algorithm unrecognized.")
 
