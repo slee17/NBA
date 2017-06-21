@@ -60,7 +60,7 @@ def cluster(alg, path, cols, mvp_path=None, start_year=None, players=None, show_
 	data = data.as_matrix().astype("float32", copy=False)
 
 	# normalize
-	# data = StandardScaler().fit_transform(data)
+	data = StandardScaler().fit_transform(data)
 	
 	# use the indicated clustering algorithm
 	alg = alg.lower()
