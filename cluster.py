@@ -3,15 +3,13 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import kneighbors_graph
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
+
 from pandas import read_csv
-from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pylab as pl
-
-from mpl_toolkits.mplot3d import Axes3D
 
 # import constants
 from constants import *
