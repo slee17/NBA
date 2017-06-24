@@ -19,6 +19,7 @@ def visualize_size(player_path, season_path, category):
 
 	start_year = int(data["Year"].min())
 	end_year = int(data["Year"].max())
+	years = np.arange(start_year, end_year+1, 1)
 
 	data = data.groupby(by="Year")
 	
@@ -26,11 +27,16 @@ def visualize_size(player_path, season_path, category):
 	means = data.mean()
 	medians = data.median()
 
+	fig, ax = plt.subplots()
+
 	colors = ["lightseagreen", "orange"]
-	# x = [year for year in range(start_year, end_year+1)]
-	for year in range(start_year, end_year+1):
+	for year in years:
 		y = data.get_group(year)[category].tolist()
-		plt.scatter([year] * len(y), y, c=colors[year%2], marker="x")
+		ax.scatter([year] * len(y), y, c=colors[year%2], marker="x")
+
+	# plot lines
+	line1, = ax.plot(years, means, label="Means", c="crimson")
+	ax.legend(loc="upper right", fontsize=10, fancybox=True, framealpha=0.1, borderaxespad=1)
 
 	plt.xticks(np.arange(start_year, end_year+1, 5))
 	plt.show()
