@@ -21,6 +21,14 @@ def visualize_size(player_path, season_path, category):
 	end_year = int(data["Year"].max())
 	years = np.arange(start_year, end_year+1, 1)
 
+	print (pd.concat(g for _, g in player_data.groupby("Player") if len(g) > 1))
+
+	# convert to age if the given category is "born"
+	if category == "born":
+		data[category] = data["Year"].sub(data[category], axis=0)
+
+	# print (data.loc[data["born"] > 60])
+
 	data = data.groupby(by="Year")
 	
 	# get averages
@@ -39,7 +47,8 @@ def visualize_size(player_path, season_path, category):
 	ax.legend(loc="upper right", fontsize=10, fancybox=True, framealpha=0.1, borderaxespad=1)
 
 	plt.xticks(np.arange(start_year, end_year+1, 5))
+	plt.title("Visualization of NBA Players %s" % category.title())
 	plt.show()
 
 if __name__=='__main__':
-	visualize_size("./Data/players.csv", "./Data/season_stats.csv", "height")
+	visualize_size("./Data/Players_original.csv", "./Data/season_stats.csv", "born")
